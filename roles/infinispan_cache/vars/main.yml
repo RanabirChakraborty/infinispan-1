@@ -1,6 +1,6 @@
 ---
 # Required variables
-infinispan_deployer_password:  # noqa var-naming
+infinispan_cache_deployer_password:
 
 # Internal variables
 infinispan_rest_cache_api_path: /rest/v2/caches/ # noqa var-naming

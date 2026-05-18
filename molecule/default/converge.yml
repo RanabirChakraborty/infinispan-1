@@ -44,15 +44,15 @@
             key_partitioner: org.infinispan.distribution.ch.impl.RESPHashFunctionPartitioner
       infinispan_resp_cache: configuredstaticcache
     - role: infinispan_cache
-      infinispan_deployer_user: "supervisor"
-      infinispan_deployer_password: "remembertochangeme"
+      infinispan_cache_deployer_user: "supervisor"
+      infinispan_cache_deployer_password: "remembertochangeme"
       infinispan_cache_xml: >
         <local-cache name="testcachexml" statistics="true">
           <encoding media-type="application/octet-stream"/>
         </local-cache>
     - role: infinispan_cache
-      infinispan_deployer_user: "supervisor"
-      infinispan_deployer_password: "remembertochangeme"
+      infinispan_cache_deployer_user: "supervisor"
+      infinispan_cache_deployer_password: "remembertochangeme"
       infinispan_cache_config:
         name: configuredcache
         template: replicated
@@ -68,8 +68,8 @@
         indexing: false
         statistics: true
     - role: infinispan_cache
-      infinispan_deployer_user: "supervisor"
-      infinispan_deployer_password: "remembertochangeme"
+      infinispan_cache_deployer_user: "supervisor"
+      infinispan_cache_deployer_password: "remembertochangeme"
       infinispan_cache_config:
         name: configuredcachexa
         template: distributed
