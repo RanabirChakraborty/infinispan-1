@@ -170,3 +170,30 @@ releases:
     fragments:
     - 49.yaml
     release_date: '2025-06-05'
+  1.3.4:
+    changes:
+      bugfixes:
+      - 'infinispan collection CI label is showing no status `#51 <https://github.com/ansible-middleware/infinispan/pull/51>`_
+
+        '
+      major_changes:
+      - 'AMW-466 Ensure infinispan collection is compatible with RHEL 10 `#52 <https://github.com/ansible-middleware/infinispan/pull/52>`_
+
+        '
+      - 'AMW-525 Infinispan version update to the latest 16.1.4 `#54 <https://github.com/ansible-middleware/infinispan/pull/54>`_
+
+        '
+      - 'AMW-527 Infinispan collection to support Vector search feature `#56 <https://github.com/ansible-middleware/infinispan/pull/56>`_
+
+        '
+      minor_changes:
+      - 'Enhance replicated-cache with backup sites `#53 <https://github.com/ansible-middleware/infinispan/pull/53>`_
+
+        '
+    fragments:
+    - 51.yaml
+    - 52.yaml
+    - 53.yaml
+    - 54.yaml
+    - 56.yaml
+    release_date: '2026-05-26'
