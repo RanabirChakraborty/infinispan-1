@@ -6,7 +6,7 @@
     group: root
     mode: '0644'
   become: true
-  register: ispn_daemon_reload
+  register: infinispan_daemon_reload
   notify:
     - restart infinispan
 
@@ -14,6 +14,6 @@
   ansible.builtin.systemd:
     daemon_reload: true
   when:
-    - ispn_daemon_reload is defined
-    - ispn_daemon_reload.changed
+    - infinispan_daemon_reload is defined
+    - infinispan_daemon_reload.changed
   become: true

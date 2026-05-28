@@ -81,7 +81,7 @@
 
 - name: Determine JAVA_HOME for selected JVM RPM
   ansible.builtin.set_fact:
-    rpm_java_home: "/etc/alternatives/jre_{{ infinispan_jvm_package | regex_search('(?<=java-)[0-9.]+') }}"
+    infinispan_java_home: "/etc/alternatives/jre_{{ infinispan_jvm_package | regex_search('(?<=java-)[0-9.]+') }}"
 
 - name: "Ensure {{ infinispan.service.name }} service configuration is deployed: server.conf"
   ansible.builtin.template:
@@ -91,8 +91,6 @@
     group: "{{ infinispan.group.name }}"
     mode: '0644'
     backup: true
-  vars:
-    jdg_rpm_java_home: "{{ rpm_java_home }}"
   notify:
     - restart infinispan
   become: true
@@ -102,12 +100,12 @@
     paths: "{{ infinispan.home }}/docs/schema/"
     use_regex: true
     patterns: ['^.*-server-[0-9.]*[.]xsd$']
-  register: server_schema
+  register: infinispan_server_schema
   become: true
 
 - name: "Set fetched schema version for template"
   ansible.builtin.set_fact:
-    schema_version: "{{ server_schema.files | first | regex_search('[0-9.]*(?=.xsd)') }}"
+    infinispan_schema_version: "{{ infinispan_server_schema.files | first | regex_search('[0-9.]*(?=.xsd)') }}"
 
 - name: "Ensure {{ infinispan.service.name }} server configuration is deployed: {{ infinispan.config.name }}"
   ansible.builtin.template:

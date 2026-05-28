@@ -18,20 +18,20 @@
     xmlstring: "{{ infinispan_cache_xml | trim }}"
     xpath: /*
     content: attribute
-  register: cache_xml_name
+  register: infinispan_cache_xml_name
   vars:
     ansible_python_interpreter: "{{ '/usr/bin/python3.9' if ansible_facts['distribution_major_version'] == '8' else '/usr/bin/python3' }}"
   when: infinispan_cache_xml is defined and infinispan_cache_xml | trim | length > 0
 
 - name: Set cache name from parsed xml
   ansible.builtin.set_fact:
-    cache_name: "{{ (item.values() | list)[0]['name'] }}"
+    infinispan_cache_name: "{{ (item.values() | list)[0]['name'] }}"
   when: infinispan_cache_xml is defined and infinispan_cache_xml | trim | length > 0
-  loop: "{{ cache_xml_name.matches }}"
+  loop: "{{ infinispan_cache_xml_name.matches }}"
 
 - name: Set cache name from config
   ansible.builtin.set_fact:
-    cache_name: "{{ infinispan_cache_config.name }}"
+    infinispan_cache_name: "{{ infinispan_cache_config.name }}"
   when: infinispan_cache_config is defined and infinispan_cache_config.name is defined
 
 - name: Assemble yaml template into xmlstring
@@ -39,83 +39,83 @@
     infinispan_cache_xml: "{{ lookup('template', 'templates/'+infinispan_cache_config.template+'-cache.j2') | replace('\n', '') }}"
   when: infinispan_cache_config is defined and infinispan_cache_config.name is defined
 
-- name: "Check cache {{ cache_name }} state"
+- name: "Check cache {{ infinispan_cache_name }} state"
   ansible.builtin.uri:
-    url: "{{ infinispan_url }}{{ cache_name }}"
+    url: "{{ infinispan_url }}{{ infinispan_cache_name }}"
     method: "GET"
-    user: "{{ infinispan_deployer_user }}"
-    password: "{{ infinispan_deployer_password }}"
+    user: "{{ infinispan_cache_deployer_user }}"
+    password: "{{ infinispan_cache_deployer_password }}"
     force_basic_auth: true
     status_code:
       - 200
       - 404
-  register: cache_status
+  register: infinispan_cache_status
   retries: 5
   delay: 5
-  until: cache_status.status != -1
+  until: infinispan_cache_status.status != -1
 
-- name: "Create cache {{ cache_name }}"
-  when: cache_status.status == 404
+- name: "Create cache {{ infinispan_cache_name }}"
+  when: infinispan_cache_status.status == 404
   block:
-  - name: "Create cache {{ cache_name }} via REST API"
+  - name: "Create cache {{ infinispan_cache_name }} via REST API"
     ansible.builtin.uri:
-      url: "{{ infinispan_url }}{{ cache_name }}"
+      url: "{{ infinispan_url }}{{ infinispan_cache_name }}"
       method: "POST"
       body: "{{ infinispan_cache_xml | trim }}"
       headers:
         Content-Type: application/xml
-      user: "{{ infinispan_deployer_user }}"
-      password: "{{ infinispan_deployer_password }}"
+      user: "{{ infinispan_cache_deployer_user }}"
+      password: "{{ infinispan_cache_deployer_password }}"
       force_basic_auth: true
       status_code:
         - 200
         - 201
         - 400  # May get 400 if cache created by cluster replication between check and create
-    register: create_cache_response
+    register: infinispan_cache_create_response
     changed_when:
-      - create_cache_response.status in [200, 201]
+      - infinispan_cache_create_response.status in [200, 201]
     failed_when: >
-      create_cache_response.status not in [200, 201, 400] or
-      (create_cache_response.status == 400 and 'already exists' not in (create_cache_response.content | default('')))
+      infinispan_cache_create_response.status not in [200, 201, 400] or
+      (infinispan_cache_create_response.status == 400 and 'already exists' not in (infinispan_cache_create_response.content | default('')))
 
-  - name: "Cache {{ cache_name }} created by cluster (race condition)"
+  - name: "Cache {{ infinispan_cache_name }} created by cluster (race condition)"
     ansible.builtin.debug:
-      msg: "Cache {{ cache_name }} was created by cluster replication between check and create"
+      msg: "Cache {{ infinispan_cache_name }} was created by cluster replication between check and create"
     when:
-      - create_cache_response.status == 400
-      - "'already exists' in (create_cache_response.content | default(''))"
+      - infinispan_cache_create_response.status == 400
+      - "'already exists' in (infinispan_cache_create_response.content | default(''))"
 
   rescue:
-  - name: "Retry Create cache {{ cache_name }} using curl (Workaround)" # noqa command-instead-of-module
+  - name: "Retry Create cache {{ infinispan_cache_name }} using curl (Workaround)" # noqa command-instead-of-module
     ansible.builtin.command: >-
-      curl -s -w '\n%{http_code}' -X POST -u "{{ infinispan_deployer_user }}:{{ infinispan_deployer_password }}"
+      curl -s -w '\n%{http_code}' -X POST -u "{{ infinispan_cache_deployer_user }}:{{ infinispan_cache_deployer_password }}"
       -H "Content-Type: application/xml"
       -d '{{ infinispan_cache_xml | trim }}'
-      "{{ infinispan_url }}{{ cache_name }}"
-    register: curl_create
+      "{{ infinispan_url }}{{ infinispan_cache_name }}"
+    register: infinispan_cache_curl_result
     changed_when:
-      - curl_create.stdout_lines[-1] in ['200', '201']
-      - "'already exists' not in curl_create.stdout"
-    failed_when:
-      - curl_create.stdout_lines[-1] not in ['200', '201', '400', '409']
-      - "'already exists' not in curl_create.stdout"
+      - infinispan_cache_curl_result.stdout_lines[-1] in ['200', '201']
+      - "'already exists' not in infinispan_cache_curl_result.stdout"
+    failed_when: >
+      infinispan_cache_curl_result.stdout_lines[-1] not in ['200', '201', '400', '409'] or
+      'already exists' not in infinispan_cache_curl_result.stdout
 
-  - name: "Cache {{ cache_name }} created by cluster replication"
+  - name: "Cache {{ infinispan_cache_name }} created by cluster replication"
     ansible.builtin.debug:
-      msg: "Cache {{ cache_name }} was created by cluster replication between check and create (race condition)"
+      msg: "Cache {{ infinispan_cache_name }} was created by cluster replication between check and create (race condition)"
     when:
-      - curl_create is defined
-      - "'already exists' in curl_create.stdout"
+      - infinispan_cache_curl_result is defined
+      - "'already exists' in infinispan_cache_curl_result.stdout"
 
   - name: Exit because cache creation failed
     ansible.builtin.fail:
-      msg: "Error while creating cache via REST API: {{ curl_create.stdout if curl_create is defined else create_cache_response.msg | default('Unknown error') }}"
+      msg: "Error while creating cache via REST API: {{ infinispan_cache_curl_result.stdout if infinispan_cache_curl_result is defined else infinispan_cache_create_response.msg | default('Unknown error') }}"
     when:
-      - curl_create is defined
-      - curl_create.failed | default(false)
-      - "'already exists' not in curl_create.stdout"
+      - infinispan_cache_curl_result is defined
+      - infinispan_cache_curl_result.failed | default(false)
+      - "'already exists' not in infinispan_cache_curl_result.stdout"
 
-- name: "Cache {{ cache_name }} already exists"
+- name: "Cache {{ infinispan_cache_name }} already exists"
   ansible.builtin.debug:
-    msg: "Cache {{ cache_name }} already exists, skipping creation..."
-  when: cache_status.status in [200, 204]
+    msg: "Cache {{ infinispan_cache_name }} already exists, skipping creation..."
+  when: infinispan_cache_status.status in [200, 204]

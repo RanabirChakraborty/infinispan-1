@@ -16,7 +16,7 @@ argument_specs:
                 default: false
                 description: "Server REST API/hotrod have TLS enabled"
                 type: "bool"
-            infinispan_deployer_user:
+            infinispan_cache_deployer_user:
                 # line 5 of infinispan_cache/defaults/main.yml
                 default: "supervisor"
                 description: "Username that performs the API call"
@@ -35,7 +35,7 @@ argument_specs:
                     indexing_path, indexing_startup_mode, indexing_entities (list of
                     ProtoStream type names; required when indexing is true).
                 type: "dict"
-            infinispan_deployer_password:
+            infinispan_cache_deployer_password:
                 # line 3 of infinispan_cache/vars/main.yml
                 required: true
                 description: "Password for the user performing the API call"

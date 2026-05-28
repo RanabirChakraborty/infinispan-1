@@ -25,31 +25,31 @@
 ## check remote archive
 - name: Set download archive path
   ansible.builtin.set_fact:
-    archive: "{{ infinispan_app_download_dir }}/{{ infinispan.bundle }}"
+    infinispan_archive: "{{ infinispan_app_download_dir }}/{{ infinispan.bundle }}"
 
 - name: Check download archive path
   ansible.builtin.stat:
-    path: "{{ archive }}"
-  register: archive_path
+    path: "{{ infinispan_archive }}"
+  register: infinispan_archive_path
   become: true
 
 - name: Check local download archive path
   ansible.builtin.stat:
     path: "{{ lookup('env', 'PWD') }}"
-  register: local_path
+  register: infinispan_local_path
   delegate_to: localhost
 
 ## download to controller
 - name: Download infinispan archive
   ansible.builtin.get_url: # noqa risky-file-permissions delegated, uses controller host user
     url: "{{ infinispan_download_url }}"
-    dest: "{{ local_path.stat.path }}/{{ infinispan.bundle }}"
+    dest: "{{ infinispan_local_path.stat.path }}/{{ infinispan.bundle }}"
     mode: '0644'
   delegate_to: localhost
   when:
-    - archive_path is defined
-    - archive_path.stat is defined
-    - not archive_path.stat.exists
+    - infinispan_archive_path is defined
+    - infinispan_archive_path.stat is defined
+    - not infinispan_archive_path.stat.exists
     - data_grid_enable is not defined or not data_grid_enable
     - not infinispan_offline_install
 
@@ -57,9 +57,9 @@
   delegate_to: localhost
   run_once: true
   when:
-    - archive_path is defined
-    - archive_path.stat is defined
-    - not archive_path.stat.exists
+    - infinispan_archive_path is defined
+    - infinispan_archive_path.stat is defined
+    - not infinispan_archive_path.stat.exists
     - data_grid_enable is defined and data_grid_enable
     - not data_grid_offline_install
     - rhn_username is defined and rhn_password is defined
@@ -71,13 +71,13 @@
         product_type: DISTRIBUTION
         product_version: "{{ data_grid_version }}"
         product_category: "{{ data_grid_product_category }}"
-      register: rhn_products
+      register: infinispan_rhn_products
       delegate_to: localhost
       run_once: true
 
     - name: Determine install zipfile from search results
       ansible.builtin.set_fact:
-        rhn_filtered_products: "{{ rhn_products.results | selectattr('file_path', 'match', '.*/redhat-datagrid-' + data_grid_version + '-server.zip') }}"
+        infinispan_rhn_filtered_products: "{{ infinispan_rhn_products.results | selectattr('file_path', 'match', '.*/redhat-datagrid-' + data_grid_version + '-server.zip') }}"
       delegate_to: localhost
       run_once: true
 
@@ -85,8 +85,8 @@
       middleware_automation.common.product_download:
         client_id: "{{ rhn_username }}"
         client_secret: "{{ rhn_password }}"
-        product_id: "{{ (rhn_filtered_products | first).id }}"
-        dest: "{{ local_path.stat.path }}/{{ infinispan.bundle }}"
+        product_id: "{{ (infinispan_rhn_filtered_products | first).id }}"
+        dest: "{{ infinispan_local_path.stat.path }}/{{ infinispan.bundle }}"
       no_log: "{{ omit_rhn_output | default(true) }}"
       delegate_to: localhost
       run_once: true
@@ -94,14 +94,14 @@
 - name: Download Data Grid archive from alternate location
   ansible.builtin.get_url: # noqa risky-file-permissions delegated, uses controller host user
     url: "{{ infinispan_download_url }}"
-    dest: "{{ local_path.stat.path }}/{{ infinispan.bundle }}"
+    dest: "{{ infinispan_local_path.stat.path }}/{{ infinispan.bundle }}"
     mode: '0644'
   delegate_to: localhost
   when:
     - jdg_download_url is defined and jdg_download_url | length > 0
-    - archive_path is defined
-    - archive_path.stat is defined
-    - not archive_path.stat.exists
+    - infinispan_archive_path is defined
+    - infinispan_archive_path.stat is defined
+    - not infinispan_archive_path.stat.exists
     - data_grid_enable is defined and data_grid_enable
     - not infinispan_offline_install
     - not data_grid_rhn_url is defined or not data_grid_rhn_url in infinispan_download_url
@@ -109,28 +109,28 @@
 
 - name: Check downloaded archive
   ansible.builtin.stat:
-    path: "{{ local_path.stat.path }}/{{ infinispan.bundle }}"
-  register: local_archive_path
+    path: "{{ infinispan_local_path.stat.path }}/{{ infinispan.bundle }}"
+  register: infinispan_local_archive_path
   delegate_to: localhost
 
 ## copy and unpack
 - name: Copy archive to target nodes
   ansible.builtin.copy:
-    src: "{{ local_path.stat.path }}/{{ infinispan.bundle }}"
-    dest: "{{ archive }}"
+    src: "{{ infinispan_local_path.stat.path }}/{{ infinispan.bundle }}"
+    dest: "{{ infinispan_archive }}"
     owner: "{{ infinispan.user.name }}"
     group: "{{ infinispan.group.name }}"
     mode: '0640'
-  register: new_version_downloaded
+  register: infinispan_new_version_downloaded
   when:
-    - local_archive_path.stat is defined
-    - local_archive_path.stat.exists
+    - infinispan_local_archive_path.stat is defined
+    - infinispan_local_archive_path.stat.exists
   become: true
 
 - name: "Check target directory: {{ infinispan.installation_path }}"
   ansible.builtin.stat:
     path: "{{ infinispan.installation_path }}/bin"
-  register: path_to_workdir
+  register: infinispan_path_to_workdir
   become: true
 
 - name: "Create target directory {{ infinispan.installation_path | dirname }}"
@@ -145,14 +145,14 @@
 - name: "Extract {{ infinispan.name }} archive on target {{ infinispan.installation_path }}"
   ansible.builtin.unarchive:
     remote_src: true
-    src: "{{ archive }}"
+    src: "{{ infinispan_archive }}"
     dest: "{{ infinispan.installation_path | dirname | dirname }}"
     creates: "{{ infinispan.installation_path }}/bin"
     owner: "{{ infinispan.user.name }}"
     group: "{{ infinispan.group.name }}"
   become: true
   when:
-    - new_version_downloaded.changed or not path_to_workdir.stat.exists
+    - infinispan_new_version_downloaded.changed or not infinispan_path_to_workdir.stat.exists
   notify:
     - restart infinispan
 
@@ -160,7 +160,7 @@
   ansible.builtin.debug:
     msg: "{{ infinispan.installation_path }} already exists and version unchanged, skipping decompression"
   when:
-    - not new_version_downloaded.changed and path_to_workdir.stat.exists
+    - not infinispan_new_version_downloaded.changed and infinispan_path_to_workdir.stat.exists
 
 - name: "Reown installation directory to {{ infinispan.user.name }}"
   ansible.builtin.file:

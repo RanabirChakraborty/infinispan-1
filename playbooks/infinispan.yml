@@ -8,8 +8,8 @@
       infinispan_jgroups_discovery: PING
       infinispan_users: []
     - role: infinispan_cache
-      infinispan_deployer_user: "supervisor"
-      infinispan_deployer_password: "remembertochangeme"
+      infinispan_cache_deployer_user: "supervisor"
+      infinispan_cache_deployer_password: "remembertochangeme"
       infinispan_cache_xml: >
         <local-cache name="testcache" statistics="true">
           <encoding media-type="application/octet-stream"/>

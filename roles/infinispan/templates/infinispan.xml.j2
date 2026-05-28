@@ -1,10 +1,10 @@
 <!-- {{ ansible_managed }} -->
 <infinispan
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="urn:infinispan:config:{{ schema_version }} https://infinispan.org/schemas/infinispan-config-{{ schema_version }}.xsd
-                            urn:infinispan:server:{{ schema_version }} https://infinispan.org/schemas/infinispan-server-{{ schema_version }}.xsd"
-        xmlns="urn:infinispan:config:{{ schema_version }}"
-        xmlns:server="urn:infinispan:server:{{ schema_version }}">
+        xsi:schemaLocation="urn:infinispan:config:{{ infinispan_schema_version }} https://infinispan.org/schemas/infinispan-config-{{ infinispan_schema_version }}.xsd
+                            urn:infinispan:server:{{ infinispan_schema_version }} https://infinispan.org/schemas/infinispan-server-{{ infinispan_schema_version }}.xsd"
+        xmlns="urn:infinispan:config:{{ infinispan_schema_version }}"
+        xmlns:server="urn:infinispan:server:{{ infinispan_schema_version }}">
 
     <jgroups>
         <stack name="datagrid" extends="tcp">
@@ -165,7 +165,7 @@
 {% endif %}
     </cache-container>
 {% endif %}
-   <server xmlns="urn:infinispan:server:{{ schema_version }}">
+   <server xmlns="urn:infinispan:server:{{ infinispan_schema_version }}">
       <interfaces>
          <interface name="public">
              <any-address/>

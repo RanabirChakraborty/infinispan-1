@@ -68,8 +68,8 @@
       ansible.builtin.include_role:
         name: infinispan_cache
       vars:
-        infinispan_deployer_user: "supervisor"
-        infinispan_deployer_password: "vectorsearch123"
+        infinispan_cache_deployer_user: "supervisor"
+        infinispan_cache_deployer_password: "vectorsearch123"
         infinispan_cache_config:
           name: products
           template: distributed
