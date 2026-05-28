@@ -240,5 +240,5 @@ argument_specs:
                 type: "str"
             data_grid_product_category:
                 default: "data.grid"
-                description: "JBossNetwork API category for data_grid"
+                description: "Unified Downloads API category for data_grid"
                 type: "str"
